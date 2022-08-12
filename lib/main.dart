@@ -85,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Stack(
         children: <Widget>[
           StreamBuilder<List<List<int>>>(
-              stream: needStart ? lifeGame.startGame(timeINmsec: 2000) : null,
+              stream: needStart ? lifeGame.startGame(timeINmsec: 500) : null,
               builder: (context, snapshot) {
                 // if (snapshot.hasData)
                 return Container(

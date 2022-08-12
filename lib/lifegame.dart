@@ -11,6 +11,7 @@ class LifeGame {
   List<List<int>> currentMap = [];
   final int width;
   final int height;
+  bool onEndless = false;
   bool isStart = false;
   bool _isRun = false;
   LifeGame({this.width = 3, this.height = 3}) {
@@ -42,9 +43,11 @@ class LifeGame {
     });
   }
 
-  Stream<List<List<int>>> startGame({int timeINmsec = 1000}) async* {
+  Stream<List<List<int>>> startGame(
+      {int timeINmsec = 1000, bool onEndless = false}) async* {
     isStart = true;
     _isRun = true;
+    this.onEndless = onEndless;
     while (_isRun) {
       await Future.delayed(Duration(milliseconds: timeINmsec));
       yield next();
@@ -59,8 +62,6 @@ class LifeGame {
     for (var i = 0; i < width; i++) {
       for (var i1 = 0; i1 < height; i1++) {
         currentMap[i][i1] = 0;
-
-        
       }
     }
   }
@@ -87,7 +88,7 @@ class LifeGame {
   List<List<int>> next() {
     for (var i = 0; i < width; i++) {
       for (var i1 = 0; i1 < height; i1++) {
-        var c = _analize(i, i1);
+        var c = onEndless ? _analizeEndlessMap(i, i1) : _analize(i, i1);
         if (currentMap[i][i1] & 1 == 1) {
           //Она жива и надо проверить будет ли она жить
           if (c.cellLife == 2 || c.cellLife == 3) {
@@ -108,6 +109,7 @@ class LifeGame {
     return currentMap;
   }
 
+  ///если карта ограничена рамкой
   LifeCell _analize(int w, int h) {
     LifeCell cell = LifeCell();
     int _w = w - 1;
@@ -134,30 +136,32 @@ class LifeGame {
     }
     return cell;
   }
-  // LifeCell _analize(int w, int h) {
-  //   LifeCell cell = LifeCell();
-  //   int _w = w - 1;
-  //   int _h = h - 1;
-  //   if (_w < 0) _w = width - 1;
-  //   if (_h < 0) _h = height - 1;
-  //   int _hStart = _h;
-  //   for (int i = 0; i < 3; i++) {
-  //     for (int i1 = 0; i1 < 3; i1++) {
-  //       if (!(_w == w && _h == h)) {
-  //         if (currentMap[_w][_h] & 1 == 1) {
-  //           cell.cellLife++;
-  //         } else {
-  //           cell.cellEmpty++;
-  //         }
-  //       }
 
-  //       _h++;
-  //       if (_h >= height) _h = 0;
-  //     }
-  //     _h = _hStart;
-  //     _w++;
-  //     if (_w >= width) _w = 0;
-  //   }
-  //   return cell;
-  // }
+  ///если у нас карта условно бесконечная, тоесть не ограничена полями
+  LifeCell _analizeEndlessMap(int w, int h) {
+    LifeCell cell = LifeCell();
+    int _w = w - 1;
+    int _h = h - 1;
+    if (_w < 0) _w = width - 1;
+    if (_h < 0) _h = height - 1;
+    int _hStart = _h;
+    for (int i = 0; i < 3; i++) {
+      for (int i1 = 0; i1 < 3; i1++) {
+        if (!(_w == w && _h == h)) {
+          if (currentMap[_w][_h] & 1 == 1) {
+            cell.cellLife++;
+          } else {
+            cell.cellEmpty++;
+          }
+        }
+
+        _h++;
+        if (_h >= height) _h = 0;
+      }
+      _h = _hStart;
+      _w++;
+      if (_w >= width) _w = 0;
+    }
+    return cell;
+  }
 }

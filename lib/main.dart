@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:life_game/cell_widget.dart';
 import 'package:life_game/lifegame.dart';
+import 'package:event_bus_arch/event_bus_arch.dart';
 
+EventBus bus = EventBus(isBusForModel: true);
 void main() {
   runApp(const MyApp());
 }
@@ -84,34 +86,27 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Stack(
         children: <Widget>[
-          StreamBuilder<List<List<int>>>(
-              stream: needStart ? lifeGame.startGame(timeINmsec: 200, onEndless: true) : null,
-              builder: (context, snapshot) {
-                // if (snapshot.hasData)
-                return Container(
-                    padding: EdgeInsets.fromLTRB(10, 10, 10, 45),
-                    child: GridView.count(
-                      mainAxisSpacing: 1,
-                      crossAxisSpacing: 1,
-                      childAspectRatio: 1,
-                      physics: AlwaysScrollableScrollPhysics(),
-                      shrinkWrap: false,
-                      crossAxisCount: lifeGame.width,
-                      children: [
-                        for (var i = 0; i < lifeGame.height; i++)
-                          for (var i1 = 0; i1 < lifeGame.width; i1++)
-                            CellWidget(
-                              lifeGame,
-                              i1,
-                              i,
-                              key: Key('$i$i1${lifeGame.currentMap[i1][i]}'),
-                              onTap: update,
-                            ),
-                      ],
-                    ));
-                // else
-                //   return Container();
-              }),
+          Container(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 45),
+              child: GridView.count(
+                mainAxisSpacing: 1,
+                crossAxisSpacing: 1,
+                childAspectRatio: 1,
+                physics: AlwaysScrollableScrollPhysics(),
+                shrinkWrap: false,
+                crossAxisCount: lifeGame.width,
+                children: [
+                  for (var i = 0; i < lifeGame.height; i++)
+                    for (var i1 = 0; i1 < lifeGame.width; i1++)
+                      CellWidget(
+                        lifeGame,
+                        i1,
+                        i,
+                        // key: Key('$i$i1${lifeGame.currentMap[i1][i]}'),
+                        onTap: update,
+                      ),
+                ],
+              )),
           Align(
             alignment: Alignment.bottomCenter,
             child: Row(
@@ -128,8 +123,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     } else {
                       lifeGame.generateLife();
                       needStart = true;
+                      lifeGame.startWithBus(bus);
                     }
-                    setState(() {});
+                    if (mounted) {
+                      setState(() {});
+                    }
                   },
                   child: needStart ? Text('стоп') : Text('сгенерировать'),
                 ),
@@ -143,8 +141,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       needStart = false;
                     } else {
                       needStart = true;
+                      lifeGame.startWithBus(bus);
                     }
-                    setState(() {});
+                    if (mounted) {
+                      setState(() {});
+                    }
                   },
                   child: needStart ? Text('стоп') : Text('старт'),
                 ),

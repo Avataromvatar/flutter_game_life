@@ -1,5 +1,8 @@
 import 'dart:math';
 
+import 'package:event_bus_arch/event_bus_arch.dart';
+import 'package:life_game/main.dart';
+
 class LifeCell {
   int cellLife = 0;
   int cellEmpty = 0;
@@ -14,6 +17,7 @@ class LifeGame {
   bool onEndless = false;
   bool isStart = false;
   bool _isRun = false;
+  bool _isBus = false;
   LifeGame({this.width = 3, this.height = 3}) {
     for (var i = 0; i < width; i++) {
       currentMap.add(List<int>.filled(height, 0));
@@ -40,9 +44,30 @@ class LifeGame {
 
   Future<void> stop() async {
     _isRun = false;
-    await Future.doWhile(() async {
-      await Future.delayed(Duration(milliseconds: 10));
-      return isStart;
+    if (!_isBus) {
+      await Future.doWhile(() async {
+        await Future.delayed(Duration(milliseconds: 10));
+        return isStart;
+      });
+    }
+  }
+
+  Future<void> startWithBus(
+    EventBus bus, {
+    int timeINmsec = 100,
+  }) async {
+    isStart = true;
+    _isRun = true;
+    _isBus = true;
+    Future.doWhile(() async {
+      await Future.delayed(Duration(milliseconds: timeINmsec));
+      next();
+      await Future.delayed(Duration(milliseconds: timeINmsec));
+      clearLastSatet();
+      if (!_isRun) {
+        print('END');
+      }
+      return _isRun;
     });
   }
 
@@ -64,6 +89,7 @@ class LifeGame {
     for (var i = 0; i < width; i++) {
       for (var i1 = 0; i1 < height; i1++) {
         currentMap[i][i1] = 0;
+        bus.send(currentMap[i][i1], eventName: '$i!$i1');
       }
     }
   }
@@ -73,7 +99,11 @@ class LifeGame {
     int tmp = 0;
     for (var i = 0; i < width; i++) {
       for (var i1 = 0; i1 < height; i1++) {
-        currentMap[i][i1] = (currentMap[i][i1] >> 1) & 1;
+        tmp = (currentMap[i][i1] >> 1) & 1;
+        if (_isBus && tmp != currentMap[i][i1]) {
+          bus.send(tmp, eventName: '$i!$i1');
+        }
+        currentMap[i][i1] = tmp;
 
         if (currentMap[i][i1] & 1 == 1) {
           isDie = false;
@@ -88,13 +118,16 @@ class LifeGame {
   ///если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить;
   ///в противном случае (если живых соседей меньше двух или больше трёх) клетка умирает («от одиночества» или «от перенаселённости»)
   List<List<int>> next() {
+    var tmp = 0;
     for (var i = 0; i < width; i++) {
       for (var i1 = 0; i1 < height; i1++) {
+        tmp = currentMap[i][i1];
         var c = onEndless ? _analizeEndlessMap(i, i1) : _analize(i, i1);
         if (currentMap[i][i1] & 1 == 1) {
           //Она жива и надо проверить будет ли она жить
           if (c.cellLife == 2 || c.cellLife == 3) {
             //life
+
             currentMap[i][i1] |= 2;
           } else {
             //die
@@ -103,6 +136,11 @@ class LifeGame {
           ///в пустой (мёртвой) клетке, с которой соседствуют три живые клетки, зарождается жизнь;
           if (c.cellLife == 3) {
             currentMap[i][i1] |= 2;
+          }
+        }
+        if (tmp != currentMap[i][i1]) {
+          if (_isBus) {
+            bus.send(currentMap[i][i1], eventName: '$i!$i1');
           }
         }
       }

@@ -4,8 +4,8 @@ import 'package:life_game/lifegame.dart';
 class CellWidget extends StatefulWidget {
   final int x, y;
   final LifeGame lifeGame;
-  Function()? onTap;
-  CellWidget(this.lifeGame, this.x, this.y, {this.onTap});
+  final Function()? onTap;
+  const CellWidget(this.lifeGame, this.x, this.y, {super.key, this.onTap});
   @override
   State<CellWidget> createState() => _CellWidgetState();
 }

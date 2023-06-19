@@ -20,13 +20,16 @@ class LifeGame {
     }
   }
 
-  void generateLife({int lifersMax = 30}) {
+  /// luck 0.0-1.0
+  void generateLife({int? lifersMax, double luck = 0.2}) {
     isStart = false;
+
+    lifersMax ??= height * width;
 
     int count = 0;
     for (var i = 0; i < width; i++) {
       for (var i1 = 0; i1 < height; i1++) {
-        currentMap[i][i1] = Random().nextInt(101) > 50 ? 1 : 0;
+        currentMap[i][i1] = Random().nextInt(101) > 100 * (1 - luck) ? 1 : 0;
         if (currentMap[i][i1] == 1) {
           count++;
         }
@@ -43,8 +46,7 @@ class LifeGame {
     });
   }
 
-  Stream<List<List<int>>> startGame(
-      {int timeINmsec = 1000, bool onEndless = false}) async* {
+  Stream<List<List<int>>> startGame({int timeINmsec = 1000, bool onEndless = false}) async* {
     isStart = true;
     _isRun = true;
     this.onEndless = onEndless;

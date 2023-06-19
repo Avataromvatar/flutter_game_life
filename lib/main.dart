@@ -53,7 +53,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  LifeGame lifeGame = LifeGame(width: 10, height: 10);
+  LifeGame lifeGame = LifeGame(width: 100, height: 60);
   bool needStart = false;
   Widget _generateNewWidget() {
     return Container(
@@ -65,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // lifeGame.generateLife();
+    lifeGame.generateLife();
     super.initState();
   }
 
@@ -85,25 +85,30 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Stack(
         children: <Widget>[
           StreamBuilder<List<List<int>>>(
-              stream: needStart ? lifeGame.startGame(timeINmsec: 500) : null,
+              stream: needStart ? lifeGame.startGame(timeINmsec: 200, onEndless: true) : null,
               builder: (context, snapshot) {
                 // if (snapshot.hasData)
                 return Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 45),
                     child: GridView.count(
-                  mainAxisSpacing: 2,
-                  crossAxisSpacing: 2,
-                  crossAxisCount: lifeGame.height,
-                  children: [
-                    for (var i = 0; i < lifeGame.width; i++)
-                      for (var i1 = 0; i1 < lifeGame.height; i1++)
-                        CellWidget(
-                          lifeGame,
-                          i1,
-                          i,
-                          onTap: update,
-                        ),
-                  ],
-                ));
+                      mainAxisSpacing: 1,
+                      crossAxisSpacing: 1,
+                      childAspectRatio: 1,
+                      physics: AlwaysScrollableScrollPhysics(),
+                      shrinkWrap: false,
+                      crossAxisCount: lifeGame.width,
+                      children: [
+                        for (var i = 0; i < lifeGame.height; i++)
+                          for (var i1 = 0; i1 < lifeGame.width; i1++)
+                            CellWidget(
+                              lifeGame,
+                              i1,
+                              i,
+                              key: Key('$i$i1${lifeGame.currentMap[i1][i]}'),
+                              onTap: update,
+                            ),
+                      ],
+                    ));
                 // else
                 //   return Container();
               }),
